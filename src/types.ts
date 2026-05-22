@@ -15,14 +15,28 @@ export interface RapierColliderDesc {
   restitution: number;
 }
 
+/** A Rapier rigid body handle — opaque to this library. */
+export interface RapierRigidBody {
+  handle: number;
+}
+
+export interface RapierRigidBodyDesc {
+  fixed(): RapierRigidBodyDesc;
+}
+
 /** Minimal Rapier world interface — only the methods we use. */
 export interface RapierWorld {
-  createCollider(desc: RapierColliderDesc): RapierCollider;
+  createCollider(desc: RapierColliderDesc, parent?: RapierRigidBody | null): RapierCollider;
   removeCollider(collider: RapierCollider, wakeUp: boolean): void;
+  createRigidBody(desc?: RapierRigidBodyDesc): RapierRigidBody;
+  removeRigidBody(body: RapierRigidBody, wakeUp: boolean): void;
 }
 
 /** Minimal Rapier module interface — only the statics we use. */
 export interface RapierModule {
+  RigidBodyDesc: {
+    fixed(): RapierRigidBodyDesc;
+  };
   ColliderDesc: {
     trimesh(
       vertices: Float32Array,

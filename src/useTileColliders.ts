@@ -13,6 +13,8 @@ export interface UseTileCollidersOptions {
   restitution?: number;
   /** Callbacks for collider lifecycle events. */
   callbacks?: TileColliderSyncCallbacks;
+  /** If true, create rigid bodies for colliders. Default: false */
+  rigidbody?: boolean;
   /**
    * useFrame priority for the sync pass.
    * Should run after tiles have updated. Default: 0
@@ -69,6 +71,7 @@ export function useTileColliders(
       {
         friction: options.friction,
         restitution: options.restitution,
+        rigidbody: options.rigidbody,
         callbacks: stableCallbacks,
       },
     );
@@ -78,7 +81,7 @@ export function useTileColliders(
       sync.dispose();
       syncRef.current = null;
     };
-  }, [options.friction, options.restitution, stableCallbacks]);
+  }, [options.friction, options.restitution, options.rigidbody, stableCallbacks]);
 
   useFrame(() => {
     if (!group || !syncRef.current) return;

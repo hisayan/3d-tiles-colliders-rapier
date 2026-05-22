@@ -1,10 +1,12 @@
-import { Mesh, Vector3 } from "three";
+import { Vector3 } from "three";
+import type { Mesh } from "three";
 import type { Object3D } from "three";
 import type {
   RapierCollider,
   RapierColliderDesc,
   RapierWorld,
   RapierModule,
+  RapierRigidBody 
 } from "./types.js";
 
 export interface TileColliderSyncCallbacks {
@@ -23,6 +25,8 @@ export interface TileColliderSyncOptions {
   restitution?: number;
   /** Callbacks for collider lifecycle events. */
   callbacks?: TileColliderSyncCallbacks;
+  /** If true, create rigid bodies for colliders. Default: false */
+  rigidbody?: boolean;
 }
 
 /**
@@ -38,6 +42,8 @@ export interface TileColliderSyncOptions {
 export class TileColliderSync {
   private world: RapierWorld;
   private rapier: RapierModule;
+  private rigidBodyEnabled: boolean;
+  private rigidBody: RapierRigidBody | null = null;
   private colliderMap = new Map<string, RapierCollider>();
   private friction: number;
   private restitution: number;
@@ -53,6 +59,7 @@ export class TileColliderSync {
     this.world = world;
     this.friction = options.friction ?? 1.0;
     this.restitution = options.restitution ?? 0.0;
+    this.rigidBodyEnabled = options.rigidbody ?? false;
     this.callbacks = options.callbacks ?? {};
   }
 
@@ -111,6 +118,10 @@ export class TileColliderSync {
     }
     this.colliderMap.clear();
     this.firstSyncDone = false;
+    if (this.rigidBody) {
+      this.world.removeRigidBody(this.rigidBody, true);
+      this.rigidBody = null;
+    }
   }
 
   private createTrimeshCollider(mesh: Mesh): RapierCollider | null {
@@ -150,6 +161,10 @@ export class TileColliderSync {
     desc.friction = this.friction;
     desc.restitution = this.restitution;
 
-    return this.world.createCollider(desc as RapierColliderDesc);
+    if (this.rigidBodyEnabled && !this.rigidBody) {
+      this.rigidBody = this.world.createRigidBody(this.rapier.RigidBodyDesc.fixed());
+    }
+
+    return this.world.createCollider(desc as RapierColliderDesc, this.rigidBody);
   }
 }
